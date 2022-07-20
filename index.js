@@ -1,105 +1,115 @@
-//Si lleva más de 10 productos del mismo tipo se le da el decimo gratis todos los días, ESTO SERÁ IMPLÍCITO SIN AVISAR
-//Si lleva cada uno de los tipos de productos se da un descuento del 10%, ESTO SERÁ IMPLÍCITO SIN AVISAR
-//Los L, J y V tiene descuento del 20%.
 
-//Base de datos
+// 1) LEER LOS DATOS DEL CURSO SELECCIONADO
+// 2) MOSTRANDO EN EL CARRITO LOS CURSOS SELECCIONADOS
+// 3) ACTUALIZAR LA CANTIDAD DE CURSOS EN EL CARRITO
+// 4) ELIMINAR UN CURSO DEL CARRITO
+// 5) VACIAR EL CARRITO DE COMPRA
+    
 
-const dias = ["L", "J", "V"]; //días de descuento
-class InfoDeProductos {
-    constructor(nombre, precioUnitario, cantidad) {
-        this.nombre = nombre;
-        this.precioUnitario = precioUnitario;
-        this.cantidad = cantidad;
-        this.precioPorCantidad = 0; 
+//VARIABLES
+
+const carrito = document.querySelector("#carrito");
+const contenedorCarrito = document.querySelector("#lista-carrito tbody");
+const vaciarCarritoBtn = document.querySelector("#vaciar-carrito");
+const listaCursos = document.querySelector("#lista-cursos");
+let articulosCarrito = [];
+
+cargarEventListeners();
+
+function cargarEventListeners() {
+    listaCursos.addEventListener("click", agregarCurso);
+
+    //Eliminar cursos del carrito
+    carrito.addEventListener("click", eliminarCurso);
+
+    //Vaciando el carrito
+
+    vaciarCarritoBtn.addEventListener("click", () => {
+        articulosCarrito = [];
+
+        limpiarHTML();
+    });
+}
+//FUNCIONES
+
+// (1) A través del boton podemos acceder al curso seleccionado
+function agregarCurso(e) {
+    e.preventDefault();
+
+    if (e.target.classList.contains("agregar-carrito")) {
+        const cursoSeleccionado = e.target.parentElement;
+        leerDatosCurso(cursoSeleccionado);
+    }
+}
+
+// (4) Eliminar curso del carrito
+
+function eliminarCurso(e) {
+    e.preventDefault();
+    // console.log(e.target.classList);
+    if (e.target.classList.contains("borrar-curso")) {
+        const cursoID = e.target.getAttribute("id");
+
+        //Eliminar del arreglo de articulosCarrito por el id
+        articulosCarrito = articulosCarrito.filter((curso) => curso.id !== cursoID);
+
+        carritoHTML();
+    }
+}
+
+// (2) Leer los datos del curso seleccionado y lo extrae
+function leerDatosCurso(curso) {
+    const infoCurso = {
+        imagen: curso.querySelector("img").src,
+        titulo: curso.querySelector(".card-title").innerText,
+        precio: curso.querySelector("h6").innerText,
+        id: curso.querySelector("a").getAttribute("id"),
+        cantidad: 1,
     };
-};
 
-const infoDeProductos = [];
+    //Revisa si un elemento ya existe en el carrito
 
-infoDeProductos.push(new InfoDeProductos("papas", 1, 0));
-infoDeProductos.push(new InfoDeProductos("cebolla", 1.2, 0));
-infoDeProductos.push(new InfoDeProductos("calabacin", 2.1, 0));
-infoDeProductos.push(new InfoDeProductos("fresas", 0.6, 0));
-
-//variable
-let precioFinal = 0;
-
-//funcion para filtrar productos 
-function filtrarProductos(filtro) {
-    const filtracion = infoDeProductos.filter(objeto => objeto.nombre.indexOf(filtro) !== -1)
-
-    if (filtracion.length === 0) {
-        alert("Filtración fallida");
-    } else {
-        const filtraciones = filtracion.map(el => el.nombre + "\n");
-        alert(`Estos son los productos filtrados \n${filtraciones.join("")}`);
-    };
-};
-
-//funciones para el descuento de días
-//verificar el día para realizar el descuento 
-const verificarDia = (objeto, dia) => {
-    if (dias.includes(dia)) {
-        alert("Es día de descuentos :) \n20% menos en tu compra total");
-        objeto.precioPorCantidad *= .8;
-    } else {
-        alert("No es día de descuentos :(");
-    };
-};
-
-//funcion para determinar el precio con descuento "de cada 10 te llevas uno gratis"
-const retornarOferta = (objeto) => {
-    if (objeto.cantidad >= 10) {
-        objeto.precioPorCantidad = objeto.precioUnitario * objeto.cantidad - ((objeto.cantidad - (objeto.cantidad % 10)) / 10) * objeto.precioUnitario;
-    };
-};  
-
-alert(
-    "Papas: $1 \nCebolla: $1.2 \nCalabacin: $2.1 \nFresas $0.6 \nSi llevas por lo menos 1u. de cada producto te damos un descuento del 10% \nPor cada 10 productos del mismo tipo se le da el décimo totalmente gratis \nLos Lunes, Jueves y Viernes tenemos descuento del 20% adicional"
-);
-
-//do ..while
-do {
-    let preguntaInicial = prompt("¿Qué tipo de producto desea llevar?\nEscriba el nombre o letra para filtrar").toLowerCase();
-    filtrarProductos(preguntaInicial);
-
-    let preguntaSecundaria = prompt("De acuerdo a su filtración, ¿qué producto desea llevar?").toLowerCase();
-
-    //Ciclo for ..of para tener el elemento que en filtra
-    for (const el of infoDeProductos) {
-        //Verificamos que este el producto
-        if (preguntaSecundaria === el.nombre) {
-            const preguntaCantidad = prompt("¿Cuántos deseas llevar?");
-            //Verificamos si es una cantidad válida
-            if (preguntaCantidad >= 1){
-                el.cantidad += preguntaCantidad*1;
-                el.precioPorCantidad += (el.cantidad * el.precioUnitario);
-                alert(el.nombre + "\nCantidad a llevar: " + el.cantidad + "\nPrecio Total de este producto: " + el.precioPorCantidad);
-                retornarOferta(el);
-
-                //Verificamos el días para dar descuento
-                const preguntaDias = prompt("¿Qué día es hoy? \nLunes: 'L' \nJueves: 'J' \nViernes: 'V'").toUpperCase();
-                verificarDia(el, preguntaDias);
-                break;
+    const existe = articulosCarrito.some((curso) => curso.id === infoCurso.id);
+    if (existe) {
+        //Actualizamos la cantidad
+        const cursos = articulosCarrito.map((curso) => {
+            if (curso.id === infoCurso.id) {
+                curso.cantidad++;
+                return curso; // retorna objeto actualizado
             } else {
-                alert("Ingrese un valor númerico")
-                break;
-            };
-        };
-    };
+                return curso; // retorna los objetos que no son duplicados
+            }
+        });
+        articulosCarrito = [...cursos];
+    } else {
+        //Agregar elementos al arreglo del carrito
+        articulosCarrito = [...articulosCarrito, infoCurso];
+    }
+    carritoHTML();
+}
 
-} while(confirm("¿Desea continuar agregando productos?"));
+// (3) Muestra el Carrito en el HTML
 
-// Verificamos si compro por lo menos un producto de cada tipo para el descuento del 10%
-const descuento = infoDeProductos.find(el => el.cantidad === 0);
-if(descuento === undefined){
-    for (obj of infoDeProductos){
-        obj.precioPorCantidad *= .9;
-    };
-};
+function carritoHTML() {
+    //Limpiar el HTML
+    limpiarHTML();
 
-console.log(infoDeProductos);
-for (const el of infoDeProductos){
-    precioFinal += el.precioPorCantidad;
-};
-alert(`El precio total es:  ${precioFinal.toFixed(2)}`);
+    //Recorre el carrito y genera el HTML
+    articulosCarrito.forEach((curso) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${curso.titulo}</td>
+    <td>${curso.precio}</td>
+    <td>${curso.cantidad}</td>
+    <td>
+    <a href="" class="borrar-curso" id="${curso.id}">x</a>
+    </td>`;
+        //Agrega el HTML del carrito en el tbody
+        contenedorCarrito.appendChild(row);
+    });
+}
+
+// (5) Elimina los cursos del HTML
+
+function limpiarHTML() {
+    contenedorCarrito.innerHTML = "";
+}
