@@ -13,8 +13,14 @@ p{
     margin: 2px;
     text-align: center;
 }
+div:hover{
+    background-color: unset;
+    transition: ease .25s;
+}
+
 .productos{
     border: solid red;
+    background-color: red;
     width: 20vw;
     display: flex;
     flex-direction: column;
